@@ -8,7 +8,6 @@ export function createConnection(dbPath) {
       issue_key TEXT PRIMARY KEY,
       summary TEXT,
       created datetime,
-      resolution TEXT,
       issue_type TEXT,
       status_category TEXT,
       status TEXT

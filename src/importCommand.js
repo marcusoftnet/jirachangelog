@@ -41,8 +41,8 @@ const SQL_INSERT_CHANGELOG = `
 `;
 
 const SQL_INSERT_ISSUES = `
-  INSERT INTO issues (issue_key, summary, created, resolution, issue_type, status_category, status)
-  VALUES (@issue_key, @summary, @created, @resolution, @issue_type, @status_category, @status)
+  INSERT INTO issues (issue_key, summary, created, issue_type, status_category, status)
+  VALUES (@issue_key, @summary, @created, @issue_type, @status_category, @status)
 `;
 
 const writeToDb = (objects, sql, dbPath) => {

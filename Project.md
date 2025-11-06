@@ -3,11 +3,13 @@
 ## Todos
 
 - Add export to prompt as default (not passing --output)
+  - Add to readme example that pipes result to a file
 - Add issuetype and status (and statuscateogry) to the changelog for filtering
 - Add more views for some example questions
   - When was the first time an item entered status
   - At date how many items were in a certain state
 - Add a few example prompts for users to use with AI
+- Add option to name/clear table before creating out
 
 ---
 
