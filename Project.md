@@ -1,5 +1,18 @@
 # 🧰 Jira Changelog CLI — Project Plan
 
+## Todos
+
+- Add export to prompt as default (not passing --output)
+- Add issuetype and status (and statuscateogry) to the changelog for filtering
+- Add more views for some example questions
+  - When was the first time an item entered status
+  - At date how many items were in a certain state
+- Add a few example prompts for users to use with AI
+
+---
+
+## Old Plan
+
 ## 🎯 Goal
 
 A lightweight **CLI tool** that downloads Jira issue changelogs for any JQL query, stores them locally in SQLite, and allows full SQL querying of historical data.

@@ -4,6 +4,18 @@ export function createConnection(dbPath) {
   const db = new Database(dbPath);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS issues (
+      issue_key TEXT PRIMARY KEY,
+      summary TEXT,
+      created datetime,
+      resolution TEXT,
+      issue_type TEXT,
+      status_category TEXT,
+      status TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_issue_type ON issues(issue_type);
+    CREATE INDEX IF NOT EXISTS idx_issue_created ON issues(created);
+
     CREATE TABLE IF NOT EXISTS changelog (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       issue_key TEXT,
@@ -13,28 +25,31 @@ export function createConnection(dbPath) {
       change_date TEXT,
       author TEXT
     );
+    CREATE INDEX IF NOT EXISTS idx_changelog_date ON changelog(change_date);
+
     CREATE VIEW IF NOT EXISTS v_status_durations AS
+    WITH status_changes AS (
+      SELECT
+        issue_key,
+        to_value AS status,
+        datetime(change_date) AS entered_at,
+        LEAD(datetime(change_date)) OVER (
+          PARTITION BY issue_key ORDER BY datetime(change_date)
+        ) AS left_at
+      FROM changelog
+      WHERE field = 'status'
+    )
     SELECT
       issue_key,
-      field,
-      to_value AS status,
-      change_date AS entered_at,
-      COALESCE(
-        LEAD(change_date) OVER (PARTITION BY issue_key ORDER BY datetime(change_date)),
-        CURRENT_TIMESTAMP
-      ) AS left_at,
+      status,
+      entered_at,
+      COALESCE(left_at, CURRENT_TIMESTAMP) AS left_at,
       ROUND(
-        JULIANDAY(
-          COALESCE(
-            LEAD(change_date) OVER (PARTITION BY issue_key ORDER BY datetime(change_date)),
-            CURRENT_TIMESTAMP
-          )
-        ) - JULIANDAY(datetime(change_date)),
+        JULIANDAY(COALESCE(left_at, CURRENT_TIMESTAMP)) -
+        JULIANDAY(entered_at),
         3
       ) AS days_in_state
-    FROM changelog
-    WHERE field = 'status';
-    CREATE INDEX IF NOT EXISTS idx_changelog_date ON changelog(change_date);
+    FROM status_changes;
   `);
 
   return db;

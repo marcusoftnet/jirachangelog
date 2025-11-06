@@ -67,11 +67,28 @@ export async function fetchIssueChangelog(
   }
 }
 
+const parseIssue = (issue) => {
+  const {
+    key,
+    fields: { issuetype, summary, status, created, resolution, labels },
+  } = issue;
+  return {
+    issue_key: key,
+    summary,
+    created,
+    resolution,
+    labels,
+    issue_type: issuetype.name,
+    status: status.name,
+    status_category: status.statusCategory.name,
+  };
+};
+
 /**
  * Fetch all issue keys matching a JQL query, with pagination
  * using the GET /rest/api/3/search/jql endpoint
  */
-export async function fetchIssueKeys(
+export async function fetchIssuesByJql(
   jql,
   { apiUrl, username, token },
   batchSize = 5000
@@ -81,16 +98,16 @@ export async function fetchIssueKeys(
 
   const headers = createHeaders(username, token);
 
-  console.log(`Fetching issue keys for JQL: "${jql}"`);
+  console.log(`Fetching issues for JQL: "${jql}"`);
 
-  const allKeys = [];
+  const allIssues = [];
   try {
     do {
       const q = new URLSearchParams({
         jql,
         startAt: String(startAt),
         maxResults: String(batchSize),
-        fields: "key",
+        fields: "key, issuetype, summary, status, created, resolution, labels",
       });
 
       const url = `${apiUrl}/search/jql?${q.toString()}`;
@@ -99,7 +116,7 @@ export async function fetchIssueKeys(
       const response = await fetch(url, { method: "GET", headers });
 
       if (response.status === 429) {
-        console.warn(`WARN: Rate-limit hit, waiting 3 s before retry…`);
+        console.warn(`WARN: Rate-limit hit, waiting 3 s before retry…`);
         await delay(3000);
         continue;
       }
@@ -117,15 +134,14 @@ export async function fetchIssueKeys(
       }
 
       const result = await response.json();
-      const issues = result.issues || [];
-      const keys = issues.map((i) => i.key);
-      allKeys.push(...keys);
+      const issues = result.issues.map(parseIssue);
+      allIssues.push(...issues);
 
       total = result.total ?? issues.length;
       startAt += issues.length;
 
       console.debug(
-        `Fetched ${keys.length} issue keys (total so far: ${allKeys.length}/${
+        `Fetched ${issues.length} issues (total so far: ${allIssues.length}/${
           total ?? "?"
         })`
       );
@@ -133,9 +149,9 @@ export async function fetchIssueKeys(
       await delay(200 + Math.random() * 500);
     } while (total === null || startAt < total);
   } catch (err) {
-    console.error(`❌ Exception during fetchIssueKeys: ${err.message}`);
+    console.error(`❌ Exception during fetchIssuesByJql: ${err.message}`);
   }
 
-  console.log(`✅ Done. Retrieved ${allKeys.length} issues from Jira.`);
-  return allKeys;
+  console.log(`✅ Done. Retrieved ${allIssues.length} issues from Jira.`);
+  return allIssues;
 }

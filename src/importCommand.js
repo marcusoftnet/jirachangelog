@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import dotenv from "dotenv";
-import { fetchIssueKeys, fetchIssueChangelog } from "./JiraUtils.js";
+import { fetchIssuesByJql, fetchIssueChangelog } from "./JiraUtils.js";
 import { createConnection } from "./db.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
@@ -13,11 +13,11 @@ const normalizeJiraDate = (input) => {
   if (!input) return null;
   const parsed = dayjs.utc(input);
   if (!parsed.isValid()) return input;
-  return parsed.format("YYYY‑MM‑DD HH:mm:ss");
+  return parsed.format("YYYY-MM-DD HH:mm:ss");
 };
 
-const createChangeLogRow = (issueKey, item, entry) => ({
-  issue_key: issueKey,
+const createChangeLogRow = (issue_key, item, entry) => ({
+  issue_key,
   field: item.field,
   from_value: item.fromString || null,
   to_value: item.toString || null,
@@ -25,32 +25,37 @@ const createChangeLogRow = (issueKey, item, entry) => ({
   author: entry.author?.displayName ?? "",
 });
 
-const fetchChangeLogs = async (issueKeys, username, token) => {
-  const changelogPromises = issueKeys.map((key) =>
-    fetchIssueChangelog(key, username, token).then((changes) => ({
-      key,
+const fetchChangeLogs = async (issues, username, token) => {
+  const changelogPromises = issues.map(({ issue_key }) =>
+    fetchIssueChangelog(issue_key, username, token).then((changes) => ({
+      issue_key,
       changes,
     }))
   );
   return Promise.all(changelogPromises);
 };
 
-const insertSQL = `
+const SQL_INSERT_CHANGELOG = `
   INSERT INTO changelog (issue_key, field, from_value, to_value, change_date, author)
   VALUES (@issue_key, @field, @from_value, @to_value, @change_date, @author)
 `;
 
-const writeChangeLogRowsToDb = (changeLogRows, dbPath) => {
+const SQL_INSERT_ISSUES = `
+  INSERT INTO issues (issue_key, summary, created, resolution, issue_type, status_category, status)
+  VALUES (@issue_key, @summary, @created, @resolution, @issue_type, @status_category, @status)
+`;
+
+const writeToDb = (objects, sql, dbPath) => {
   const db = createConnection(dbPath);
   try {
-    console.debug(`Inserting ${changeLogRows.length} change log rows into DB`);
-    const insert = db.prepare(insertSQL);
+    console.debug(`Inserting ${objects.length} rows to DB`);
+    const insert = db.prepare(sql);
 
     const insertMany = db.transaction((rows) => {
       for (const row of rows) insert.run(row);
     });
 
-    insertMany(changeLogRows);
+    insertMany(objects);
   } catch (error) {
     console.error(`❌ Failed to write to DB: ${error.message}`);
     process.exit(1);
@@ -60,9 +65,9 @@ const writeChangeLogRowsToDb = (changeLogRows, dbPath) => {
 };
 
 const changeLogsToRows = (changeLogs) =>
-  changeLogs.flatMap(({ key, changes }) =>
+  changeLogs.flatMap(({ issue_key, changes }) =>
     changes.flatMap((entry) =>
-      entry.items.map((item) => createChangeLogRow(key, item, entry))
+      entry.items.map((item) => createChangeLogRow(issue_key, item, entry))
     )
   );
 
@@ -82,14 +87,14 @@ const exportAction = async (opts) => {
   }
   const jiraParams = { apiUrl, username, token };
 
-  const issueKeys = await fetchIssueKeys(jql, jiraParams);
-
-  const changeLogs = await fetchChangeLogs(issueKeys, jiraParams);
+  const issues = await fetchIssuesByJql(jql, jiraParams);
+  const changeLogs = await fetchChangeLogs(issues, jiraParams);
   const changeLogRows = changeLogsToRows(changeLogs);
 
-  writeChangeLogRowsToDb(changeLogRows, dbPath);
+  writeToDb(issues, SQL_INSERT_ISSUES, dbPath);
+  writeToDb(changeLogRows, SQL_INSERT_CHANGELOG, dbPath);
 
-  console.log(`✅ Import complete for ${issueKeys.length} issues.`);
+  console.log(`✅ Import complete for ${issues.length} issues.`);
 };
 
 export const importCommand = new Command("import")

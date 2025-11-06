@@ -23,17 +23,20 @@ Jira's UI and built-in reports make accessing historical state transitions cumbe
 ## 🚀 Installation
 
 1. Clone this repository:
+
 ```bash
 git clone <repository-url>
 cd jirachangelog
 ```
 
-2. Install dependencies:
+1. Install dependencies:
+
 ```bash
 npm install
 ```
 
-3. Make the CLI executable (if not already):
+1. Make the CLI executable (if not already):
+
 ```bash
 chmod +x cli/jirachangelog.js
 ```
@@ -63,6 +66,7 @@ jirachangelog import \
 ```
 
 **Options:**
+
 - `--jql <query>` (required): JQL query to find issues
 - `--username <username>`: Jira username/email (overrides .env)
 - `--token <token>`: Jira API token (overrides .env)
@@ -70,6 +74,7 @@ jirachangelog import \
 - `--db <path>`: SQLite database file path (default: `./output/jira_data.db`)
 
 **Example:**
+
 ```bash
 jirachangelog import \
   --jql "project = DEMO AND updated >= -30d" \
@@ -84,19 +89,21 @@ Run SQL queries on the local database and export results to CSV or JSON:
 
 ```bash
 jirachangelog export \
-  --query "SELECT * FROM v_status_durations WHERE status = 'In Progress'" \
+  --query "SELECT * FROM changelog WHERE status = 'In Progress'" \
   --output ./output/cycle_times.csv \
   --format csv \
   --db ./output/jira_data.db
 ```
 
 **Options:**
+
 - `--query <sql>` (required): SQL query to execute
 - `--output <filename>` (required): Output filename
 - `--format <format>`: Output format: `csv` or `json` (default: `csv`)
 - `--db <path>`: SQLite database file path (default: `./output/jira_data.db`)
 
 **Example:**
+
 ```bash
 jirachangelog export \
   --query "SELECT to_status, AVG(days_in_state) AS avg_days FROM v_status_durations GROUP BY to_status" \
@@ -111,6 +118,7 @@ The tool creates a SQLite database with the following structure:
 ### Tables
 
 **`changelog`**
+
 - `id` (INTEGER PRIMARY KEY)
 - `issue_key` (TEXT)
 - `field` (TEXT) - The field that changed (e.g., "status", "assignee")
@@ -123,6 +131,7 @@ The tool creates a SQLite database with the following structure:
 
 **`v_status_durations`**
 A pre-built view that calculates time spent in each status for all issues:
+
 - `issue_key` - The issue identifier
 - `status` - The status name
 - `entered_at` - When the issue entered this status
@@ -132,6 +141,7 @@ A pre-built view that calculates time spent in each status for all issues:
 ## 📊 Example Queries
 
 ### Average time in each status
+
 ```sql
 SELECT
   status,
@@ -144,6 +154,7 @@ ORDER BY avg_days DESC;
 ```
 
 ### Issues currently in a specific status
+
 ```sql
 SELECT
   issue_key,
@@ -157,6 +168,7 @@ ORDER BY days_in_state DESC;
 ```
 
 ### All status transitions for an issue
+
 ```sql
 SELECT
   field,
@@ -171,6 +183,7 @@ ORDER BY change_date;
 ```
 
 ### Issues awaiting review
+
 ```sql
 SELECT
   issue_key,
@@ -193,7 +206,7 @@ ORDER BY days_in_state DESC;
 
 The project structure:
 
-```
+```text
 jirachangelog/
 ├── cli/
 │   └── jirachangelog.js      # CLI entry point
@@ -215,13 +228,16 @@ jirachangelog/
 
 ## 🐛 Troubleshooting
 
-**Issue: "Missing credentials or API URL"**
+### Issue: "Missing credentials or API URL"
+
 - Ensure your `.env` file is set up correctly, or pass credentials via CLI options
 
-**Issue: Rate limiting errors**
+### Issue: Rate limiting errors
+
 - The tool automatically retries on rate limit errors, but you may need to wait longer between imports
 
-**Issue: "Failed to fetch issue keys"**
+### Issue: "Failed to fetch issue keys"
+
 - Verify your JQL query is valid
 - Check that your API token has the necessary permissions
 - Ensure the Jira API URL is correct
@@ -233,4 +249,3 @@ ISC
 ## 🤝 Contributing
 
 Contributions welcome! Please feel free to submit a Pull Request.
-
