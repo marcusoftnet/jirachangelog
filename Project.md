@@ -2,6 +2,7 @@
 
 ## Todos
 
+- Rename the project to "JiraTimeMachine" (jtm as command)
 - Add export to prompt as default (not passing --output)
   - Add to readme example that pipes result to a file
 - Add issuetype and status (and statuscateogry) to the changelog for filtering
