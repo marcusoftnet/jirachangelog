@@ -24,9 +24,13 @@ const exportAction = async (opts) => {
 
   const data = formatData(rows, format);
 
+  if (!output) {
+    console.log(data);
+    process.exit(0);
+  }
+
   try {
     fs.writeFileSync(output, data, "utf8");
-    console.log(`✅ Query results written to ${output} (${rows.length} rows)`);
   } catch (err) {
     console.error(`❌ Failed to write output file: ${err.message}`);
     process.exit(1);
@@ -36,7 +40,7 @@ const exportAction = async (opts) => {
 export const exportCommand = new Command("export")
   .description("Export query results from local DB")
   .requiredOption("--query <sql>", "SQL query to execute")
-  .requiredOption("--output <filename>", "Output filename")
+  .option("--output <filename>", "Output filename")
   .option("--format <format>", "Output format: csv|json", "csv")
   .option("--db <path>", "SQLite DB file", "./output/jira_data.db")
   .action(exportAction);

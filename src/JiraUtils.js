@@ -149,7 +149,5 @@ export async function fetchIssuesByJql(
   } catch (err) {
     console.error(`❌ Exception during fetchIssuesByJql: ${err.message}`);
   }
-
-  console.log(`✅ Done. Retrieved ${allIssues.length} issues from Jira.`);
   return allIssues;
 }

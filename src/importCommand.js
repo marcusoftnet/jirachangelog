@@ -93,8 +93,6 @@ const exportAction = async (opts) => {
 
   writeToDb(issues, SQL_INSERT_ISSUES, dbPath);
   writeToDb(changeLogRows, SQL_INSERT_CHANGELOG, dbPath);
-
-  console.log(`✅ Import complete for ${issues.length} issues.`);
 };
 
 export const importCommand = new Command("import")
