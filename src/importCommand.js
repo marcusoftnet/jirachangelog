@@ -16,19 +16,25 @@ const normalizeJiraDate = (input) => {
   return parsed.format("YYYY-MM-DD HH:mm:ss");
 };
 
-const createChangeLogRow = (issue_key, item, entry) => ({
-  issue_key,
-  field: item.field,
-  from_value: item.fromString || null,
-  to_value: item.toString || null,
-  change_date: normalizeJiraDate(entry.created),
-  author: entry.author?.displayName ?? "",
-});
+const createChangeLogRow = (issue, changelogItem, entry) => {
+  const r = {
+    issue_key: issue.issue_key,
+    issue_created: normalizeJiraDate(issue.created),
+    issue_labels: issue.labels.join(","),
+    issue_type: issue.issue_type,
+    field: changelogItem.field,
+    from_value: changelogItem.fromString || null,
+    to_value: changelogItem.toString || null,
+    change_date: normalizeJiraDate(entry.created),
+    author: entry.author?.displayName ?? "",
+  };
+  return r;
+};
 
 const fetchChangeLogs = async (issues, username, token) => {
-  const changelogPromises = issues.map(({ issue_key }) =>
-    fetchIssueChangelog(issue_key, username, token).then((changes) => ({
-      issue_key,
+  const changelogPromises = issues.map((issue) =>
+    fetchIssueChangelog(issue.issue_key, username, token).then((changes) => ({
+      issue,
       changes,
     }))
   );
@@ -36,19 +42,13 @@ const fetchChangeLogs = async (issues, username, token) => {
 };
 
 const SQL_INSERT_CHANGELOG = `
-  INSERT INTO changelog (issue_key, field, from_value, to_value, change_date, author)
-  VALUES (@issue_key, @field, @from_value, @to_value, @change_date, @author)
-`;
-
-const SQL_INSERT_ISSUES = `
-  INSERT INTO issues (issue_key, created, issue_type, status_category, status)
-  VALUES (@issue_key, @created, @issue_type, @status_category, @status)
+  INSERT INTO changelog (issue_key, issue_created, issue_type, issue_labels, field, from_value, to_value, change_date, author)
+  VALUES (@issue_key, @issue_created, @issue_type, @issue_labels, @field, @from_value, @to_value, @change_date, @author)
 `;
 
 const writeToDb = (objects, sql, dbPath) => {
   const db = createConnection(dbPath);
   try {
-    console.debug(`Inserting ${objects.length} rows to DB`);
     const insert = db.prepare(sql);
 
     const insertMany = db.transaction((rows) => {
@@ -65,9 +65,9 @@ const writeToDb = (objects, sql, dbPath) => {
 };
 
 const changeLogsToRows = (changeLogs) =>
-  changeLogs.flatMap(({ issue_key, changes }) =>
+  changeLogs.flatMap(({ issue, changes }) =>
     changes.flatMap((entry) =>
-      entry.items.map((item) => createChangeLogRow(issue_key, item, entry))
+      entry.items.map((item) => createChangeLogRow(issue, item, entry))
     )
   );
 
@@ -91,7 +91,6 @@ const exportAction = async (opts) => {
   const changeLogs = await fetchChangeLogs(issues, jiraParams);
   const changeLogRows = changeLogsToRows(changeLogs);
 
-  writeToDb(issues, SQL_INSERT_ISSUES, dbPath);
   writeToDb(changeLogRows, SQL_INSERT_CHANGELOG, dbPath);
 };
 

@@ -82,6 +82,15 @@ const parseIssue = (issue) => {
   };
 };
 
+const createParams = (jql, startAt, batchSize) => {
+  return new URLSearchParams({
+    jql,
+    startAt: String(startAt),
+    maxResults: String(batchSize),
+    fields: "key, issuetype, status, created, labels",
+  });
+};
+
 /**
  * Fetch all issue keys matching a JQL query, with pagination
  * using the GET /rest/api/3/search/jql endpoint
@@ -101,16 +110,8 @@ export async function fetchIssuesByJql(
   const allIssues = [];
   try {
     do {
-      const q = new URLSearchParams({
-        jql,
-        startAt: String(startAt),
-        maxResults: String(batchSize),
-        fields: "key, issuetype, status, created, labels",
-      });
-
+      const q = createParams(jql, startAt, batchSize);
       const url = `${apiUrl}/search/jql?${q.toString()}`;
-      console.debug(`🔍 Requesting: ${url}`);
-
       const response = await fetch(url, { method: "GET", headers });
 
       if (response.status === 429) {
@@ -137,12 +138,6 @@ export async function fetchIssuesByJql(
 
       total = result.total ?? issues.length;
       startAt += issues.length;
-
-      console.debug(
-        `Fetched ${issues.length} issues (total so far: ${allIssues.length}/${
-          total ?? "?"
-        })`
-      );
 
       await delay(200 + Math.random() * 500);
     } while (total === null || startAt < total);

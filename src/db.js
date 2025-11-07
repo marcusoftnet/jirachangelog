@@ -4,19 +4,12 @@ export function createConnection(dbPath) {
   const db = new Database(dbPath);
 
   db.exec(`
-    CREATE TABLE IF NOT EXISTS issues (
-      issue_key TEXT PRIMARY KEY,
-      created datetime,
-      issue_type TEXT,
-      status_category TEXT,
-      status TEXT
-    );
-    CREATE INDEX IF NOT EXISTS idx_issue_type ON issues(issue_type);
-    CREATE INDEX IF NOT EXISTS idx_issue_created ON issues(created);
-
     CREATE TABLE IF NOT EXISTS changelog (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       issue_key TEXT,
+      issue_created datetime,
+      issue_type TEXT,
+      issue_labels TEXT,
       field TEXT,
       from_value TEXT,
       to_value TEXT,
@@ -24,6 +17,8 @@ export function createConnection(dbPath) {
       author TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_changelog_date ON changelog(change_date);
+    CREATE INDEX IF NOT EXISTS idx_issue_key ON changelog(issue_key);
+    CREATE INDEX IF NOT EXISTS idx_issue_type ON changelog(issue_type);
 
     CREATE VIEW IF NOT EXISTS v_status_durations AS
     WITH status_changes AS (

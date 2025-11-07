@@ -102,7 +102,14 @@ jtm export \
 - `--format <format>`: Output format: `csv` or `json` (default: `csv`)
 - `--db <path>`: SQLite database file path (default: `./output/jira_data.db`)
 
-**Example:**
+**Examples:**
+
+```bash
+node cli/jtm export \
+  --query "SELECT issue_key, field, from_value, to_value, change_date FROM \
+  changelog" --format json \
+  > output.json
+```
 
 ```bash
 jtm export \
