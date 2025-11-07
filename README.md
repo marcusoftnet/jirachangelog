@@ -98,22 +98,23 @@ jtm export \
 **Options:**
 
 - `--query <sql>` (required): SQL query to execute
-- `--output <filename>` (required): Output filename
+- `--output <filename>`: Output filename (optional - if omitted, outputs to stdout)
 - `--format <format>`: Output format: `csv` or `json` (default: `csv`)
 - `--db <path>`: SQLite database file path (default: `./output/jira_data.db`)
 
 **Examples:**
 
 ```bash
-node cli/jtm export \
-  --query "SELECT issue_key, field, from_value, to_value, change_date FROM \
-  changelog" --format json \
+# Output to stdout (can be piped to a file)
+jtm export \
+  --query "SELECT issue_key, field, from_value, to_value, change_date FROM changelog" \
+  --format json \
   > output.json
 ```
 
 ```bash
 jtm export \
-  --query "SELECT to_status, AVG(days_in_state) AS avg_days FROM v_status_durations GROUP BY to_status" \
+  --query "SELECT status, AVG(days_in_state) AS avg_days FROM v_status_durations GROUP BY status" \
   --output ./output/avg_cycle_times.csv \
   --format csv
 ```
@@ -127,7 +128,10 @@ The tool creates a SQLite database with the following structure:
 **`changelog`**
 
 - `id` (INTEGER PRIMARY KEY)
-- `issue_key` (TEXT)
+- `issue_key` (TEXT) - The Jira issue key (e.g., "DEMO-123")
+- `issue_created` (TEXT) - When the issue was created
+- `issue_type` (TEXT) - The type of issue (e.g., "Story", "Bug", "Task")
+- `issue_labels` (TEXT) - Comma-separated list of issue labels
 - `field` (TEXT) - The field that changed (e.g., "status", "assignee")
 - `from_value` (TEXT) - Previous value
 - `to_value` (TEXT) - New value
@@ -199,6 +203,24 @@ SELECT
 FROM v_status_durations
 WHERE status = 'Awaiting Review'
 ORDER BY days_in_state DESC;
+```
+
+### Filter by issue type and labels
+
+```sql
+SELECT
+  issue_key,
+  issue_type,
+  issue_labels,
+  field,
+  from_value,
+  to_value,
+  change_date
+FROM changelog
+WHERE issue_type = 'Story'
+  AND issue_labels LIKE '%sprint%'
+  AND field = 'status'
+ORDER BY change_date;
 ```
 
 ## 🔧 Features
