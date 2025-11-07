@@ -6,7 +6,6 @@ export function createConnection(dbPath) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS issues (
       issue_key TEXT PRIMARY KEY,
-      summary TEXT,
       created datetime,
       issue_type TEXT,
       status_category TEXT,

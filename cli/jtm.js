@@ -9,7 +9,7 @@ import { exportCommand } from "../src/exportCommand.js";
 const program = new Command();
 program
   .name("jtm")
-  .description("The Jira Time Machine - query the Jira history")
+  .description("The Jira Time Machine - Query and export Jira changelogs")
   .version("1.0.0");
 
 program.addCommand(importCommand);

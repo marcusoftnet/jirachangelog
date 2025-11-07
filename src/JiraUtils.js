@@ -70,11 +70,10 @@ export async function fetchIssueChangelog(
 const parseIssue = (issue) => {
   const {
     key,
-    fields: { issuetype, summary, status, created, labels },
+    fields: { issuetype, status, created, labels },
   } = issue;
   return {
     issue_key: key,
-    summary,
     created,
     labels,
     issue_type: issuetype.name,
@@ -106,7 +105,7 @@ export async function fetchIssuesByJql(
         jql,
         startAt: String(startAt),
         maxResults: String(batchSize),
-        fields: "key, issuetype, summary, status, created, labels",
+        fields: "key, issuetype, status, created, labels",
       });
 
       const url = `${apiUrl}/search/jql?${q.toString()}`;

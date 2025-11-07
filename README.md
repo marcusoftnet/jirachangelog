@@ -1,4 +1,4 @@
-# Jira Changelog CLI
+# The Jira Time Machine
 
 A lightweight CLI tool that downloads Jira issue changelogs for any JQL query, stores them locally in SQLite, and allows full SQL querying of historical data.
 
@@ -38,7 +38,7 @@ npm install
 1. Make the CLI executable (if not already):
 
 ```bash
-chmod +x cli/jirachangelog.js
+chmod +x cli/jtm.js
 ```
 
 ## ⚙️ Configuration
@@ -60,7 +60,7 @@ Alternatively, you can pass these values as command-line options (see Usage belo
 Fetch and import changelogs for issues matching a JQL query:
 
 ```bash
-jirachangelog import \
+jtm import \
   --jql "project = DEMO AND updated >= -30d" \
   --db ./output/jira_data.db
 ```
@@ -76,7 +76,7 @@ jirachangelog import \
 **Example:**
 
 ```bash
-jirachangelog import \
+jtm import \
   --jql "project = DEMO AND updated >= -30d" \
   --username marcus@umain.com \
   --token $JIRA_TOKEN \
@@ -88,7 +88,7 @@ jirachangelog import \
 Run SQL queries on the local database and export results to CSV or JSON:
 
 ```bash
-jirachangelog export \
+jtm export \
   --query "SELECT * FROM changelog WHERE status = 'In Progress'" \
   --output ./output/cycle_times.csv \
   --format csv \
@@ -105,7 +105,7 @@ jirachangelog export \
 **Example:**
 
 ```bash
-jirachangelog export \
+jtm export \
   --query "SELECT to_status, AVG(days_in_state) AS avg_days FROM v_status_durations GROUP BY to_status" \
   --output ./output/avg_cycle_times.csv \
   --format csv
@@ -209,7 +209,7 @@ The project structure:
 ```text
 jirachangelog/
 ├── cli/
-│   └── jirachangelog.js      # CLI entry point
+│   └── jtm.js                # CLI entry point
 ├── src/
 │   ├── JiraUtils.js          # Jira API helpers
 │   ├── importCommand.js      # Import command implementation

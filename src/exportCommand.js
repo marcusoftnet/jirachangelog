@@ -4,11 +4,11 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 
 const formatData = (rows, format) => {
+  const parser = new Parser();
   switch (format) {
     case "json":
       return JSON.stringify(rows, null, 2);
     case "csv":
-      const parser = new Parser();
       return parser.parse(rows);
     default:
       console.error(`❌ Unsupported format: ${format}. Use "csv" or "json".`);

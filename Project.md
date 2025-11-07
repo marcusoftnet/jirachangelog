@@ -1,8 +1,8 @@
-# 🧰 Jira Changelog CLI — Project Plan
+# 🧰 The Jira Time Machine — Project Plan
 
 ## Todos
 
-- Rename the project to "JiraTimeMachine" (jtm as command)
+- ✅ Rename the project to "The Jira Time Machine" (jtm as command)
 - Add export to prompt as default (not passing --output)
   - Add to readme example that pipes result to a file
 - Add issuetype and status (and statuscateogry) to the changelog for filtering
@@ -60,11 +60,11 @@ This project solves that by:
 ```text
 jirachangelog/
 ├─ cli/
-│ └─ jirachangelog.js # CLI entry (Commander commands)
+│ └─ jtm.js # CLI entry (Commander commands)
 ├─ src/
 │ ├─ JiraUtils.js # Shared Jira API helpers (fetchIssueKeys fetchIssueChangelog)
-│ ├─ importCommand.js # jirachangelog import …
-│ ├─ exportCommand.js # jirachangelog export …
+│ ├─ importCommand.js # jtm import …
+│ ├─ exportCommand.js # jtm export …
 │ ├─ db.js # SQLite connection and schema
 │ ├─ queries/ # Optional SQL snippets (cycle times, CFD, etc.)
 │ └─ utils/ # Logging, helpers
@@ -88,14 +88,14 @@ Both functions use a shared `delay()` helper to throttle requests and respect Ji
 
 ## 🖱️ CLI Commands
 
-### `jirachangelog import`
+### `jtm import`
 
 Fetch and import all changelogs for issues returned by a JQL query.
 
 **Example:**
 
 ```bash
-jirachangelog import \
+jtm import \
   --jql "project = DEMO AND updated >= -30d" \
   --username marcus@umain.com \
   --token $JIRA_TOKEN \
@@ -113,15 +113,16 @@ issues(issue_key, type, created, updated, summary, status, …)
 changelog(issue_key, field, from_value, to_value, change_date, author)
 ```
 
-### `jirachangelog export`
+### `jtm export`
 
 Run SQL queries on the local database and export the results in CSV or JSON.
 
 ```bash
-jirachangelog export \
+jtm export \
   --query "SELECT to_status, AVG(days_in_state) AS avg_days FROM v_issue_state_durations GROUP BY to_status" \
   --db ./jira_data.db \
-  --format csv > cycle_times.csv
+  --format csv
+  --output ./output.csv
 ```
 
 Later, pre‑made named queries (e.g., --named cycle-times) can be added.
@@ -136,7 +137,6 @@ CREATE TABLE IF NOT EXISTS issues (
   issue_type TEXT,
   created TEXT,
   updated TEXT,
-  summary TEXT,
   status TEXT
 );
 
@@ -165,7 +165,7 @@ Derived SQL views (auto‑created by importCommand.js):
 | ✅ MVP | import and export commands working end‑to‑end. |
 | 🧩 Pre‑defined queries | Built‑in SQL snippets for cycle time, cumulative flow, etc. |
 | 🔁 Incremental sync |  Only pull issues updated since last import. |
-| ⚙️ Config file Support  | ~/.jira-changelog.yaml or .env defaults. |
+| ⚙️ Config file Support  | ~/.jira-time-machine.yaml or .env defaults. |
 | 📊 Dashboard integration  | Compatible with tools like Metabase, Observable, or Superset. |
 | ☁️ Alternative DB Backends |  DuckDB / Parquet export for large datasets. |
 | 🧪 Testing & CI  | Add tests for API/utilities and database handling. |

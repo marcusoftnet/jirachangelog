@@ -1,9 +1,9 @@
 {
   "name": "jirachangelog",
   "version": "1.0.0",
-  "description": "A CLI tool to query changelogs for Jira issues",
+  "description": "The Jira Time Machine - A CLI tool to query changelogs for Jira issues",
   "bin": {
-    "jirachangelog": "./cli/jirachangelog.js"
+    "jtm": "./cli/jtm.js"
   },
   "keywords": [],
   "author": "",
